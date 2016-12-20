@@ -262,7 +262,7 @@ init_states[patient_zero] = {'id': 1}
 
 # Setting up the simulation
 sim = NetworkSimulation(topology=G, states=init_states, agent_type=ZombieStigma, 
-                        max_time=28, num_trials=1, logging_interval=1.0, dir_path='sim_04')
+                        max_time=28, num_trials=100, logging_interval=1.0, dir_path='sim_04')
 
 # Running the simulation
 sim.run_simulation()
