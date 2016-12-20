@@ -1,2 +1,2 @@
-# diffusion_models
-Repository for network diffusion models
+# Diffusion Models
+Repository for network diffusion models.
