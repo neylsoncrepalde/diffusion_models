@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Downloadig books
+Zombie Apocalypse
 '''
 import matplotlib.pyplot as plt
 import networkx as nx
