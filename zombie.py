@@ -12,6 +12,7 @@ import os
 from nxsim import NetworkSimulation, BaseNetworkAgent, BaseLoggingAgent
 
 sns.set_context('notebook')
+os.chdir('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model')
 
 def census_to_df(log, num_trials=1, state_id=1, dir_path='sim_01'):
     """Reads nxsim log files and returns the sum of agents with a given state_id at 
@@ -124,6 +125,7 @@ class ZombieEscape(BaseNetworkAgent):
         for neighbor in zombie_neighbors:
             if random.random() < self.run_prob:
                 self.global_topology.remove_edge(self.id, neighbor.id)
+                self.state['removed'] = (self.id, neighbor.id)
                 print('Rejection:', self.env.now, 'Edge:', self.id, neighbor.id, sep='\t')
     
     def check_for_infection(self):
@@ -266,7 +268,7 @@ init_states[patient_zero] = {'id': 1}
 
 # Setting up the simulation
 sim = NetworkSimulation(topology=G, states=init_states, agent_type=ZombieEscape, 
-                        max_time=28, num_trials=1, logging_interval=1.0, dir_path='sim_02')
+                        max_time=28, num_trials=100, logging_interval=1.0, dir_path='sim_02')
 
 # Running the simulation
 sim.run_simulation()
@@ -385,16 +387,19 @@ plt.show()
 
 
 # Friends count
-escape_friends = friends_to_the_end(BaseLoggingAgent, 100, dir_path='sim_02').T
+friends_01 = friends_to_the_end(BaseLoggingAgent, 100, dir_path='sim_01').T
+escape_friends = friends_to_the_end(BaseLoggingAgent, 50, dir_path='sim_02').T
 sentimentality_friends = friends_to_the_end(BaseLoggingAgent, 100, dir_path='sim_03').T
 stigma_friends = friends_to_the_end(BaseLoggingAgent, 100, dir_path='sim_04').T
 
+plt.plot(friends_01.mean(), color='y')
 plt.plot(escape_friends.mean(), color='b')
-plt.plot(sentimentality_friends.mean(), color='g')
-plt.plot(stigma_friends.mean(), color='r')
+#plt.plot(sentimentality_friends.mean(), color='g')
+#lt.plot(stigma_friends.mean(), color='r')
 
 plt.title('Remaining Friends (Humans)')
-plt.legend(['Escape', 'Sentimentality', 'Stigma'], loc='best', frameon=True)
+plt.legend(['ZombieOutBreak','Escape'], loc='best', frameon=True)
+#plt.legend(['Escape', 'Sentimentality', 'Stigma'], loc='best', frameon=True)
 plt.xlim(xmax=27)
 plt.xticks(np.arange(0, 28., 3), tuple(range(1, 29, 3)))
 plt.ylabel('Average number of friends')
@@ -405,7 +410,7 @@ plt.show()
 
 ######################################
 #Plotando as redes de infectados
-os.chdir('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model')
+
 pos=nx.fruchterman_reingold_layout(G)
 for i in range(28): 
     
@@ -435,7 +440,7 @@ for i in range(28):
 
 # Extraindo a rede
 grafos = []
-log = BaseLoggingAgent.open_trial_state_history(dir_path='sim_02', trial_id=0)
+log = BaseLoggingAgent.open_trial_state_history(dir_path='sim_02', trial_id=6)
 for time in range(28):
     print('Grafo no tempo '+str(time))
     e = []
@@ -451,11 +456,177 @@ for time in range(28):
     grafo = nx.Graph(e)
     grafos.append(grafo)
 
-for grafo in range(28):
-    print('Edges no tempo '+str(grafo))    
-    print(len(nx.edges(grafos[grafo])))
+
+
+
+#Tentando plotar os grafos com edges diferentes na mão
+removidos = {}
+for time in range(28):
+    print('Grafo no tempo '+str(time))
+    remov = []
+    for node in range(100):
+        try:
+            rem = log[time][node]['removed']
+            remov.append(rem)
+            print(rem)
+        except KeyError:
+            print('Sem removidos na rodada')
+            continue
+    removidos[time] = remov
+
+pos = nx.fruchterman_reingold_layout(G)
+G1 = nx.Graph(G)
+G1.remove_edges_from(removidos[1])
+nx.draw(G, pos)
+#nx.draw(G1)
+
+len(G.edges())
+len(G1.edges())
+
+G2 = nx.Graph(G)
+G2.remove_edges_from(removidos[2])
+#nx.draw(G2)
+
+G3 = nx.Graph(G)
+G3.remove_edges_from(removidos[3])
+#nx.draw(G3)
+
+G4 = nx.Graph(G)
+G4.remove_edges_from(removidos[4])
+#nx.draw(G4)
+
+G5 = nx.Graph(G)
+G5.remove_edges_from(removidos[5])
+#nx.draw(G5)
+
+G6 = nx.Graph(G)
+G6.remove_edges_from(removidos[6])
+#nx.draw(G6)
+
+G7 = nx.Graph(G)
+G7.remove_edges_from(removidos[7])
+#nx.draw(G7)
+
+G8 = nx.Graph(G)
+G8.remove_edges_from(removidos[8])
+#nx.draw(G8)
+
+G9 = nx.Graph(G)
+G9.remove_edges_from(removidos[9])
+#nx.draw(G9)
+
+G10 = nx.Graph(G)
+G10.remove_edges_from(removidos[10])
+#nx.draw(G10)
+
+G11 = nx.Graph(G)
+G11.remove_edges_from(removidos[11])
+#nx.draw(G11)
+
+G12 = nx.Graph(G)
+G12.remove_edges_from(removidos[12])
+#nx.draw(G12)
+
+G13 = nx.Graph(G)
+G13.remove_edges_from(removidos[13])
+#nx.draw(G13)
+
+G14 = nx.Graph(G)
+G14.remove_edges_from(removidos[14])
+#nx.draw(G14)
+
+G15 = nx.Graph(G)
+G15.remove_edges_from(removidos[15])
+#nx.draw(G15)
+
+G16 = nx.Graph(G)
+G16.remove_edges_from(removidos[16])
+#nx.draw(G16)
+
+G17 = nx.Graph(G)
+G17.remove_edges_from(removidos[17])
+#nx.draw(G17)
+
+G18 = nx.Graph(G)
+G18.remove_edges_from(removidos[18])
+#nx.draw(G18)
+
+G19 = nx.Graph(G)
+G19.remove_edges_from(removidos[19])
+#nx.draw(G19)
+
+G20 = nx.Graph(G)
+G20.remove_edges_from(removidos[20])
+#nx.draw(G20)
+
+G21 = nx.Graph(G)
+G21.remove_edges_from(removidos[21])
+#nx.draw(G21)
+
+G22 = nx.Graph(G)
+G22.remove_edges_from(removidos[22])
+#nx.draw(G22)
+
+G23 = nx.Graph(G)
+G23.remove_edges_from(removidos[23])
+#nx.draw(G23)
+
+G24 = nx.Graph(G)
+G24.remove_edges_from(removidos[24])
+#nx.draw(G24)
+
+G25 = nx.Graph(G)
+G25.remove_edges_from(removidos[25])
+#nx.draw(G25)
+
+G26 = nx.Graph(G)
+G26.remove_edges_from(removidos[26])
+#nx.draw(G26)
+
+G27 = nx.Graph(G)
+G27.remove_edges_from(removidos[27])
+#nx.draw(G27)
+
+grafos = [G,G1,G2,G3,G4,G5,G6,G7,G8,G9,G10,G11,G12,G13,G14,G15,G16,G17,G18,G19,
+          G20,G21,G22,G23,G24,G25,G26,G27]
+
+
+'''
+for i in range(28):
+    graf = nx.Graph(G)
+    graf.remove_edge_from(removidos[i])
+    grafos.append(graf)
+
+#transformando em sets
+removidos_corr = {}
+
+for i in range(5):
+    if i == 0:    
+        rem = list(set(removidos[i]))
+        removidos_corr[i] = rem
+    else:
+        rem = list(set(removidos[i]))
+        lista = []
+        for v in rem:
+            for j in removidos_corr[i-1]:
+                if v != j:
+                    lista.append(v)
+                else:
+                    continue
+        removidos_corr[i] = lista
+removidos_corr
 
     
+#Gerando os grafos
+grafos.append(grafo_0)
+for grafo in range(1,29):
+    G_novo = grafos[grafo-1].remove_edges_from(removidos[grafo-1])
+    grafos.append(G_novo)
+''' 
+
+
+
+
 for time in range(28): 
     cor = []
     for j in range(number_of_nodes):
@@ -474,7 +645,11 @@ for time in range(28):
     pos = nx.fruchterman_reingold_layout(grafos[time])
     nx.draw_networkx_nodes(grafos[time],pos,node_size=60,node_color=cores)
     nx.draw_networkx_edges(grafos[time],pos,alpha=.4)
+    nx.draw_networkx_labels(grafos[time],pos,alpha=.7)
     plt.title('Infection - Time '+str(time), size=16)
     dens = nx.density(grafos[time])
     plt.suptitle('Densidade = '+str(dens))
-    plt.show()    
+    plt.show()
+    
+import gc
+gc.collect()
