@@ -43,6 +43,33 @@ def friends_to_the_end(log, num_trials=1, dir_path='sim_01'):
         D[name] = friends    
     return pd.DataFrame(D)    
 
+def edge_count_to_df(log, num_trials=1, state_id=1, dir_path='sim_01'):
+    """Reads nxsim log files and returns the edge count for the topology at every
+    time interval of the simulation for every run of the simulation as a pandas
+    DataFrame object."""
+    D = {}
+    for i in range(num_trials):
+        name = 'Trial ' + str(i)
+        trial = log.open_trial_state_history(dir_path=dir_path, 
+                                             trial_id=i)
+        edge_count = [len(trial[key]['topology']) for key in trial]
+        D[name] = edge_count
+    return pd.DataFrame(D)
+
+def graph_measurses_df(log, func, num_trials=1, state_id=1, dir_path='sim_01'):
+    """Reads nxsim log files and returns the provided network measure for the
+    topology at every time interval of the simulation for every run of the
+    simulation as a pandas DataFrame object."""
+    D = {}
+    for i in range(num_trials):
+        name = 'Trial ' + str(i)
+        trial = log.open_trial_state_history(dir_path=dir_path, 
+                                             trial_id=i)
+        measure = [func(nx.Graph(trial[key]['topology'])) 
+                   for key in trial]
+        D[name] = measure 
+    return pd.DataFrame(D)
+
 number_of_nodes = 100
 G = nx.scale_free_graph(number_of_nodes).to_undirected()
 
@@ -79,7 +106,7 @@ class ZombieEscape(BaseNetworkAgent):
         super().__init__(environment=environment, agent_id=agent_id, state=state)
         
         self.inf_prob = 0.3
-        self.run_prob = 0.05
+        self.run_prob = 0.2
 
     def run(self):
         while True:
@@ -87,10 +114,18 @@ class ZombieEscape(BaseNetworkAgent):
                 self.run_you_fools()
                 self.check_for_infection()
                 self.count_friends()
+                self.get_net()
                 yield self.env.timeout(1)
             else:
                 yield self.env.event()
 
+    def run_you_fools(self):
+        zombie_neighbors = self.get_neighboring_agents(state_id=1)
+        for neighbor in zombie_neighbors:
+            if random.random() < self.run_prob:
+                self.global_topology.remove_edge(self.id, neighbor.id)
+                print('Rejection:', self.env.now, 'Edge:', self.id, neighbor.id, sep='\t')
+    
     def check_for_infection(self):
         zombie_neighbors = self.get_neighboring_agents(state_id=1)
         for neighbor in zombie_neighbors:
@@ -98,17 +133,17 @@ class ZombieEscape(BaseNetworkAgent):
                 self.state['id'] = 1 # zombie
                 print('Infection:', self.env.now, self.id, '<--', neighbor.id, sep='\t')
                 break
-                
-    def run_you_fools(self):
-        zombie_neighbors = self.get_neighboring_agents(state_id=1)
-        for neighbor in zombie_neighbors:
-            if random.random() < self.run_prob:
-                self.global_topology.remove_edge(self.id, neighbor.id)
-                print('Rejection:', self.env.now, 'Edge:', self.id, neighbor.id, sep='\t')
-                
+                             
     def count_friends(self):
         human_neighbors = self.get_neighboring_agents(state_id=0)
         self.state['friends'] = len(human_neighbors)
+        
+    def get_net(self):
+        nodes = self.get_neighboring_nodes()
+        self.state['topology'] = nodes
+
+
+
 
 class ZombieSentimentality(BaseNetworkAgent):
     def __init__(self, environment=None, agent_id=0, state=()):
@@ -231,7 +266,7 @@ init_states[patient_zero] = {'id': 1}
 
 # Setting up the simulation
 sim = NetworkSimulation(topology=G, states=init_states, agent_type=ZombieEscape, 
-                        max_time=28, num_trials=100, logging_interval=1.0, dir_path='sim_02')
+                        max_time=28, num_trials=1, logging_interval=1.0, dir_path='sim_02')
 
 # Running the simulation
 sim.run_simulation()
@@ -300,7 +335,7 @@ plt.fill_between(zombies.columns, zombies.max(), zombies.min(), color='b', alpha
 plt.plot(humans.mean(), color='g')
 plt.fill_between(humans.columns, humans.max(), humans.min(), color='g', alpha=.2)
 
-plt.title('Escape ZombieApokalypse, $P_{inf} = 0.3$, $P_{run} = 0.05$')
+plt.title('Escape ZombieApokalypse, $P_{inf} = 0.3$, $P_{run} = 0.2$')
 plt.legend(['Zombies', 'Humans'], loc=7, frameon=True)
 plt.xlim(xmax=27)
 plt.xticks(np.arange(0, 28., 3), tuple(range(1, 29, 3)))
@@ -366,6 +401,8 @@ plt.ylabel('Average number of friends')
 plt.xlabel('Simulation time')
 plt.show()
 
+
+
 ######################################
 #Plotando as redes de infectados
 os.chdir('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model')
@@ -374,7 +411,7 @@ for i in range(28):
     
     cor = []
     for j in range(number_of_nodes):
-        cor.append(BaseLoggingAgent.open_trial_state_history(dir_path="sim_04", trial_id=5)[i][j]['id'])
+        cor.append(BaseLoggingAgent.open_trial_state_history(dir_path="sim_01", trial_id=1)[i][j]['id'])
     
     cores = []
     for j in cor:
@@ -384,13 +421,60 @@ for i in range(28):
             cores.append('lightgreen')
     
     #plotando a rede
-    plt.figure(i, figsize=(16, 12))
+    #plt.figure(i, figsize=(12, 8))
     plt.axis('off')
     nx.draw_networkx_nodes(G,pos,node_size=60,node_color=cores)
     nx.draw_networkx_edges(G,pos,alpha=.4)
     plt.title('Infection - Time '+str(i), size=16)
-    if i < 10:
-        plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras/image00'+str(i+1)+'.png')
-    elif i >= 10:
-        plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras/image0'+str(i+1)+'.png')
+    plt.show()    
+    #if i < 10:
+    #    plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras/image00'+str(i+1)+'.png')
+    #elif i >= 10:
+    #    plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras/image0'+str(i+1)+'.png')
 
+
+# Extraindo a rede
+grafos = []
+log = BaseLoggingAgent.open_trial_state_history(dir_path='sim_02', trial_id=0)
+for time in range(28):
+    print('Grafo no tempo '+str(time))
+    e = []
+    for node in range(100):
+        try:        
+            vizinhos = log[time][node]['topology'] 
+            for cada in vizinhos:
+                edge = (node, cada)
+                e.append(edge)
+        except KeyError as err:
+            print('Erro '+str(node))
+    
+    grafo = nx.Graph(e)
+    grafos.append(grafo)
+
+for grafo in range(28):
+    print('Edges no tempo '+str(grafo))    
+    print(len(nx.edges(grafos[grafo])))
+
+    
+for time in range(28): 
+    cor = []
+    for j in range(number_of_nodes):
+        cor.append(log[time][j]['id'])
+    
+    cores = []
+    for j in cor:
+        if j == 1:
+            cores.append('red')
+        else:
+            cores.append('lightgreen')
+    
+    #plotando a rede
+    #plt.figure(i, figsize=(12, 8))
+    plt.axis('off')
+    pos = nx.fruchterman_reingold_layout(grafos[time])
+    nx.draw_networkx_nodes(grafos[time],pos,node_size=60,node_color=cores)
+    nx.draw_networkx_edges(grafos[time],pos,alpha=.4)
+    plt.title('Infection - Time '+str(time), size=16)
+    dens = nx.density(grafos[time])
+    plt.suptitle('Densidade = '+str(dens))
+    plt.show()    
