@@ -631,7 +631,7 @@ plt.plot(densidades, color='orange')
 plt.title('Escape ZombieApokalypse, $P_{inf} = 0.3$, $P_{run} = 0.2$')
 plt.xlim(xmax=27)
 plt.xlabel('Time')
-plt.ylabel('Densidade')
+plt.ylabel('Density')
 plt.show()
 #Plotando a densidade
 
