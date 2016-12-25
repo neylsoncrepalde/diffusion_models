@@ -590,43 +590,6 @@ G27.remove_edges_from(removidos[27])
 grafos = [G,G1,G2,G3,G4,G5,G6,G7,G8,G9,G10,G11,G12,G13,G14,G15,G16,G17,G18,G19,
           G20,G21,G22,G23,G24,G25,G26,G27]
 
-
-'''
-for i in range(28):
-    graf = nx.Graph(G)
-    graf.remove_edge_from(removidos[i])
-    grafos.append(graf)
-
-#transformando em sets
-removidos_corr = {}
-
-for i in range(5):
-    if i == 0:    
-        rem = list(set(removidos[i]))
-        removidos_corr[i] = rem
-    else:
-        rem = list(set(removidos[i]))
-        lista = []
-        for v in rem:
-            for j in removidos_corr[i-1]:
-                if v != j:
-                    lista.append(v)
-                else:
-                    continue
-        removidos_corr[i] = lista
-removidos_corr
-
-    
-#Gerando os grafos
-grafos.append(grafo_0)
-for grafo in range(1,29):
-    G_novo = grafos[grafo-1].remove_edges_from(removidos[grafo-1])
-    grafos.append(G_novo)
-''' 
-
-
-
-
 for time in range(28): 
     cor = []
     for j in range(number_of_nodes):
@@ -645,11 +608,33 @@ for time in range(28):
     pos = nx.fruchterman_reingold_layout(grafos[time])
     nx.draw_networkx_nodes(grafos[time],pos,node_size=60,node_color=cores)
     nx.draw_networkx_edges(grafos[time],pos,alpha=.4)
-    nx.draw_networkx_labels(grafos[time],pos,alpha=.7)
+    #nx.draw_networkx_labels(grafos[time],pos,alpha=.7)
     plt.title('Infection - Time '+str(time), size=16)
     dens = nx.density(grafos[time])
     plt.suptitle('Densidade = '+str(dens))
-    plt.show()
     
+    #if time < 9:
+    #    plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras_escape/image00'+str(time+1)+'.png')
+    #elif time >= 9:
+    #    plt.savefig('/home/neylson/Documentos/Neylson Crepalde/Doutorado/diffusion_model/figuras_escape/image0'+str(time+1)+'.png')
+    plt.show()
+
+    
+    
+    
+densidades = []
+for time in range(28):
+    dens = nx.density(grafos[time])
+    densidades.append(dens)
+
+plt.plot(densidades, color='orange')
+plt.title('Escape ZombieApokalypse, $P_{inf} = 0.3$, $P_{run} = 0.2$')
+plt.xlim(xmax=27)
+plt.xlabel('Time')
+plt.ylabel('Densidade')
+plt.show()
+#Plotando a densidade
+
+
 import gc
 gc.collect()
