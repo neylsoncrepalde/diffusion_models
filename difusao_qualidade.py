@@ -19,9 +19,10 @@ class DifusaoQualidade(BaseNetworkAgent):
         super().__init__(environment=environment, agent_id=agent_id, state=state)
         
         self.prob_ler_critica = 0.3
+        self.prob_adotar_critica = 0.4
         self.prob_concordar = 0.6
         self.prob_ir_ao_concerto = 0.5
-        self.critica_rate = 3
+        self.critica_rate = 4
     
     def run(self):
         while True:
@@ -33,14 +34,26 @@ class DifusaoQualidade(BaseNetworkAgent):
     def ler_criticas(self):
         if np.random.random() < self.prob_ler_critica:
             print(str(self.id) + ' está lendo as críticas do concerto')
-            final_rate = (self.state['quali-rate']+self.critica_rate)/2
-            diferenca = final_rate - self.state['quali-rate']
-            if self.critica_rate < self.state['quali-rate']:
-                print('Diminuiu.', 'Rate:', diferenca, sep='\t')
+            if np.random.random() < self.prob_adotar_critica:
+                print(self.id, 'adotou a crítica PARCIALMENTE.', sep=' ')
+                final_rate = (self.state['quali-rate']+self.critica_rate)/2
+                diferenca = final_rate - self.state['quali-rate']
+                if self.critica_rate < self.state['quali-rate']:
+                    print('Diminuiu.', 'Rate:', diferenca, sep='\t')
+                else:
+                    print('Aumentou.', 'Rate:', diferenca, sep='\t')
+                #Guarda o final rate
+                self.state['quali-rate'] = final_rate
             else:
-                print('Aumentou.', 'Rate:', diferenca, sep='\t')
-            #Guarda o final rate
-            self.state['quali-rate'] = final_rate
+                print(self.id, 'adotou a crítica COMPLETAMENTE.', sep=' ')
+                final_rate = self.critica_rate
+                diferenca = final_rate - self.state['quali-rate']
+                if self.critica_rate < self.state['quali-rate']:
+                    print('Diminuiu.', 'Rate:', diferenca, sep='\t')
+                else:
+                    print('Aumentou.', 'Rate:', diferenca, sep='\t')
+                #Guarda o final rate
+                self.state['quali-rate'] = final_rate
         else:
             print('Não leu críticas.')
             
@@ -96,7 +109,7 @@ init = [{'quali-rate': state} for state in initial_states]
 
 # Preparando a simulação
 sim = NetworkSimulation(topology=G, states=init, agent_type=DifusaoQualidade, 
-                        max_time=20, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
+                        max_time=40, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
 
 # Rodando a simulação
 sim.run_simulation()
@@ -107,14 +120,21 @@ log = BaseLoggingAgent.open_trial_state_history(dir_path='quali_sim_01')
 
 rates = []
 for node in range(100):
-    rate = log[5][node]['quali-rate']
-    rates.append(rate)
+    rate = log[39][node]['quali-rate']
+    rates.append(float(rate))
         
-rates = pd.DataFrame(rates)
-rates.describe()
+final_rates = pd.DataFrame(rates)
 
-mean_rates_no_tempo = []
-for time in range(20):
+initial_states = pd.DataFrame(initial_states)
+print('Estatísticas descritivas dos rates iniciais:')
+print(initial_states.describe())
+
+print('Estatísticas descritivas dos rates finais:')
+print(final_rates.describe())
+
+
+mean_rates_no_tempo = [initial_states.mean()]
+for time in range(40):
     rates = []
     for node in range(numero_de_pessoas):
         rate = float(log[time][node]['quali-rate'])
@@ -125,7 +145,7 @@ for time in range(20):
 mean_rates_no_tempo = pd.DataFrame(mean_rates_no_tempo)
 
 plt.plot(mean_rates_no_tempo)
-plt.title('Rate médio no tempo\t$Críticas = 3$', size=16)
+plt.title('Rate médio no tempo\t$Críticas = 4$', size=16)
 plt.xlabel('Tempo')
 plt.ylabel('Rate médio')
 plt.ylim(1,5)
