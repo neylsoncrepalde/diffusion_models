@@ -21,6 +21,7 @@ class DifusaoQualidade(BaseNetworkAgent):
         
         self.prob_ler_critica = 0.3
         self.prob_concordar = 0.6
+        self.prob_ir_ao_concerto = 0.5
     
     def run(self):
         while True:
@@ -29,14 +30,23 @@ class DifusaoQualidade(BaseNetworkAgent):
             self.ir_ao_concerto()
             yield self.env.timeout(1)
     
-    def ler_criticas():
+    def ler_criticas(self):
         #definir a função
+        if np.random.random() < self.prob_ler_critica:
+            print('Lendo as críticas do concerto')
+            #continua
+            
+    def conversar_com_amigos(self):
+        #definir a função
+        print('Interação')
+        #continua
         
-    def conversar_com_amigos():
+    def ir_ao_concerto(self):
         #definir a função
+        if np.random.random() < self.prob_ir_ao_concerto:
+            print('Foi ao concerto')
+            #continua
         
-    def ir_ao_concerto():
-        #definir a função
         
 # Topologia
 numero_de_pessoas = 100
