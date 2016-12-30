@@ -28,32 +28,48 @@ class DifusaoQualidade(BaseNetworkAgent):
             self.ler_criticas()
             self.conversar_com_amigos()
             yield self.env.timeout(1)
+            
     
     def ler_criticas(self):
-        for node in self.get_all_nodes():
-            if np.random.random() < self.prob_ler_critica:
-                print(self.id + ' lendo as críticas do concerto')
-                critica_rate = np.random.normal(3,1,1)
-                self.state['critica_rate'] = critica_rate
-                self.state['quali_rate'] = (self.state['quali_rate']+critica_rate)/2
-                if critica_rate < self.state['quali_rate']:
-                    print('Diminuiu.', 'Rate:', critica_rate, sep='\t')
-                else:
-                    print('Aumentou.', 'Rate:', critica_rate, sep='\t')
+        if np.random.random() < self.prob_ler_critica:
+            print(str(self.id) + ' está lendo as críticas do concerto')
+            #Valor da crítica
+            critica_rate = np.random.normal(3,1,1)
+            self.state['critica_rate'] = critica_rate
+            self.state['quali-rate'] = (self.state['quali-rate']+critica_rate)/2
+            if critica_rate < self.state['quali-rate']:
+                print('Diminuiu.', 'Rate:', critica_rate, sep='\t')
             else:
-                continue
+                print('Aumentou.', 'Rate:', critica_rate, sep='\t')
+        else:
+            print('Não leu críticas.')
             
     def conversar_com_amigos(self):
         for vizinho in self.get_neighboring_agents():
-            
-            print('Interação')
+            if np.random.random() < self.prob_concordar:
+                meu_rate = self.state['quali-rate']
+                vizinho_rate = self.state['quali-rate']
+                final_rate = (meu_rate+vizinho_rate)/2
+                self.state['quali-rate'] = final_rate
+                vizinho.state['quali-rate'] = final_rate
+                print('Interação', self.id, vizinho.id, sep='\t')
+            else:
+                continue
             
         
     def ir_ao_concerto(self):
-        #definir a função
         if np.random.random() < self.prob_ir_ao_concerto:
-            print('Foi ao concerto')
-            #continua
+            concerto_rate = np.random.normal(3,1,1)
+            final_rate = (concerto_rate+self.state['quali-rate'])
+                
+            if concerto_rate > self.state['quali-rate']:
+                print('O concerto foi bom.')
+            else:
+                print('O concerto foi ruim.')
+                
+            self.state['quali-rate'] = final_rate
+        else:
+            print('Não foi ao concerto')
         
         
 # Topologia
@@ -74,6 +90,25 @@ for i in range(len(initial_states)):
         initial_states[i] = 5
 initial_states
 
-plt.hist(initial_states, bins=5)
+#plt.hist(initial_states, bins=5)
 
 init = [{'quali-rate': state} for state in initial_states]
+
+# Preparando a simulação
+sim = NetworkSimulation(topology=G, states=init, agent_type=DifusaoQualidade, 
+                        max_time=10, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
+
+# Rodando a simulação
+sim.run_simulation()
+
+
+# Resultados
+log = BaseLoggingAgent.open_trial_state_history(dir_path='quali_sim_01')
+
+rates = []
+for node in range(100):
+    rate = log[5][node]['quali-rate']
+    rates.append(rate)
+        
+rates = pd.DataFrame(rates)
+rates.describe()
