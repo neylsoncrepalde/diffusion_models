@@ -130,4 +130,3 @@ plt.xlabel('Tempo')
 plt.ylabel('Rate médio')
 plt.ylim(1,5)
 plt.show()
-
