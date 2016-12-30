@@ -21,6 +21,7 @@ class DifusaoQualidade(BaseNetworkAgent):
         self.prob_ler_critica = 0.3
         self.prob_concordar = 0.6
         self.prob_ir_ao_concerto = 0.5
+        self.critica_rate = 3
     
     def run(self):
         while True:
@@ -29,18 +30,17 @@ class DifusaoQualidade(BaseNetworkAgent):
             self.conversar_com_amigos()
             yield self.env.timeout(1)
             
-    
     def ler_criticas(self):
         if np.random.random() < self.prob_ler_critica:
             print(str(self.id) + ' está lendo as críticas do concerto')
-            #Valor da crítica
-            critica_rate = np.random.normal(3,1,1)
-            self.state['critica_rate'] = critica_rate
-            self.state['quali-rate'] = (self.state['quali-rate']+critica_rate)/2
-            if critica_rate < self.state['quali-rate']:
-                print('Diminuiu.', 'Rate:', critica_rate, sep='\t')
+            final_rate = (self.state['quali-rate']+self.critica_rate)/2
+            diferenca = final_rate - self.state['quali-rate']
+            if self.critica_rate < self.state['quali-rate']:
+                print('Diminuiu.', 'Rate:', diferenca, sep='\t')
             else:
-                print('Aumentou.', 'Rate:', critica_rate, sep='\t')
+                print('Aumentou.', 'Rate:', diferenca, sep='\t')
+            #Guarda o final rate
+            self.state['quali-rate'] = final_rate
         else:
             print('Não leu críticas.')
             
@@ -56,20 +56,20 @@ class DifusaoQualidade(BaseNetworkAgent):
             else:
                 continue
             
-        
     def ir_ao_concerto(self):
+        concerto_rate = np.random.normal(3,1,1)
         if np.random.random() < self.prob_ir_ao_concerto:
-            concerto_rate = np.random.normal(3,1,1)
-            final_rate = (concerto_rate+self.state['quali-rate'])
+            final_rate = (concerto_rate + self.state['quali-rate'])/2
                 
             if concerto_rate > self.state['quali-rate']:
-                print('O concerto foi bom.')
+                print('O concerto foi bom para', self.id, sep=' ')
             else:
-                print('O concerto foi ruim.')
-                
+                print('O concerto foi ruim para', self.id, sep=' ')
+            
+            self.state['concerto_rate'] = concerto_rate
             self.state['quali-rate'] = final_rate
         else:
-            print('Não foi ao concerto')
+            print(self.id, 'não foi ao concerto.', sep=' ')
         
         
 # Topologia
@@ -96,7 +96,7 @@ init = [{'quali-rate': state} for state in initial_states]
 
 # Preparando a simulação
 sim = NetworkSimulation(topology=G, states=init, agent_type=DifusaoQualidade, 
-                        max_time=10, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
+                        max_time=20, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
 
 # Rodando a simulação
 sim.run_simulation()
@@ -112,3 +112,22 @@ for node in range(100):
         
 rates = pd.DataFrame(rates)
 rates.describe()
+
+mean_rates_no_tempo = []
+for time in range(20):
+    rates = []
+    for node in range(numero_de_pessoas):
+        rate = float(log[time][node]['quali-rate'])
+        rates.append(rate)
+    mean_rate = pd.DataFrame(rates).mean()
+    mean_rates_no_tempo.append(mean_rate)
+
+mean_rates_no_tempo = pd.DataFrame(mean_rates_no_tempo)
+
+plt.plot(mean_rates_no_tempo)
+plt.title('Rate médio no tempo\t$Críticas = 3$', size=16)
+plt.xlabel('Tempo')
+plt.ylabel('Rate médio')
+plt.ylim(1,5)
+plt.show()
+
