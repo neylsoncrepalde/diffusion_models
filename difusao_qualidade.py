@@ -8,7 +8,6 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import random
 import os
 from nxsim import NetworkSimulation, BaseNetworkAgent, BaseLoggingAgent
 
@@ -25,21 +24,30 @@ class DifusaoQualidade(BaseNetworkAgent):
     
     def run(self):
         while True:
+            self.ir_ao_concerto()
             self.ler_criticas()
             self.conversar_com_amigos()
-            self.ir_ao_concerto()
             yield self.env.timeout(1)
     
     def ler_criticas(self):
-        #definir a função
-        if np.random.random() < self.prob_ler_critica:
-            print('Lendo as críticas do concerto')
-            #continua
+        for node in self.get_all_nodes():
+            if np.random.random() < self.prob_ler_critica:
+                print(self.id + ' lendo as críticas do concerto')
+                critica_rate = np.random.normal(3,1,1)
+                self.state['critica_rate'] = critica_rate
+                self.state['quali_rate'] = (self.state['quali_rate']+critica_rate)/2
+                if critica_rate < self.state['quali_rate']:
+                    print('Diminuiu.', 'Rate:', critica_rate, sep='\t')
+                else:
+                    print('Aumentou.', 'Rate:', critica_rate, sep='\t')
+            else:
+                continue
             
     def conversar_com_amigos(self):
-        #definir a função
-        print('Interação')
-        #continua
+        for vizinho in self.get_neighboring_agents():
+            
+            print('Interação')
+            
         
     def ir_ao_concerto(self):
         #definir a função
@@ -50,7 +58,9 @@ class DifusaoQualidade(BaseNetworkAgent):
         
 # Topologia
 numero_de_pessoas = 100
-G = nx.watts_strogatz_graph(numero_de_pessoas, k=5, p=0.15, seed=123)
+G = nx.watts_strogatz_graph(numero_de_pessoas, k=4, p=0.15, seed=123)
+
+G_scale_free = nx.scale_free_graph(numero_de_pessoas, seed=123)
 
 #Gerando os states iniciais como uma distribuição normal
 initial_states = np.random.normal(3,1,numero_de_pessoas).round(0)
@@ -65,3 +75,5 @@ for i in range(len(initial_states)):
 initial_states
 
 plt.hist(initial_states, bins=5)
+
+init = [{'quali-rate': state} for state in initial_states]
