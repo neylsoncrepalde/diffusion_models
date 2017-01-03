@@ -6,6 +6,7 @@ Análises
 Certifique-se de rodar o script difusao_qualidade.py antes
 Para rodar com IPython
 """
+import scipy.stats as ss
 # Análises
 
 #plotando a distribuição de grau das duas redes
