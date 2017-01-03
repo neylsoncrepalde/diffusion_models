@@ -34,7 +34,7 @@ class DifusaoQualidade(BaseNetworkAgent):
     def ler_criticas(self):
         if np.random.random() < self.prob_ler_critica:
             print(str(self.id) + ' está lendo as críticas do concerto')
-            if np.random.random() < self.prob_adotar_critica:
+            if np.random.random() > self.prob_adotar_critica:
                 print(self.id, 'adotou a crítica PARCIALMENTE.', sep=' ')
                 final_rate = (self.state['quali-rate']+self.critica_rate)/2
                 diferenca = final_rate - self.state['quali-rate']
