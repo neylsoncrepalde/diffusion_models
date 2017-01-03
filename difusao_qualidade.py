@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 import numpy as np
-import scipy.stats as ss
 import seaborn as sns
 import os
 from nxsim import NetworkSimulation, BaseNetworkAgent, BaseLoggingAgent
@@ -19,9 +18,9 @@ class DifusaoQualidade(BaseNetworkAgent):
     def __init__(self, environment=None, agent_id=0, state=()):
         super().__init__(environment=environment, agent_id=agent_id, state=state)
         
-        self.prob_ler_critica = 0.3
-        self.prob_adotar_critica = 0.4
-        self.prob_concordar = 0.6
+        self.prob_ler_critica = 0.5
+        self.prob_adotar_critica = 0.5
+        self.prob_concordar = 0.5
         self.prob_ir_ao_concerto = 0.5
         #self.critica_rate = 3
     
@@ -30,7 +29,7 @@ class DifusaoQualidade(BaseNetworkAgent):
             if self.env.now < 25:
                 self.critica_rate = 3
             else:
-                self.critica_rate = 5
+                self.critica_rate = 4
             self.ir_ao_concerto()
             self.ler_criticas()
             self.conversar_com_amigos()
@@ -119,6 +118,7 @@ sim = NetworkSimulation(topology=G_scale_free, states=init, agent_type=DifusaoQu
 # Rodando a simulação
 sim.run_simulation()
 
+print('\n\n')
 
 # Resultados
 log = BaseLoggingAgent.open_trial_state_history(dir_path='quali_sim_01')
