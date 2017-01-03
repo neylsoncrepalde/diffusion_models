@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 import numpy as np
+import scipy.stats as ss
 import seaborn as sns
 import os
 from nxsim import NetworkSimulation, BaseNetworkAgent, BaseLoggingAgent
@@ -22,10 +23,14 @@ class DifusaoQualidade(BaseNetworkAgent):
         self.prob_adotar_critica = 0.4
         self.prob_concordar = 0.6
         self.prob_ir_ao_concerto = 0.5
-        self.critica_rate = 4
+        #self.critica_rate = 3
     
     def run(self):
         while True:
+            if self.env.now < 25:
+                self.critica_rate = 3
+            else:
+                self.critica_rate = 5
             self.ir_ao_concerto()
             self.ler_criticas()
             self.conversar_com_amigos()
@@ -108,8 +113,8 @@ initial_states
 init = [{'quali-rate': state} for state in initial_states]
 
 # Preparando a simulação
-sim = NetworkSimulation(topology=G, states=init, agent_type=DifusaoQualidade, 
-                        max_time=40, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
+sim = NetworkSimulation(topology=G_scale_free, states=init, agent_type=DifusaoQualidade, 
+                        max_time=50, num_trials=1, logging_interval=1.0, dir_path='quali_sim_01')
 
 # Rodando a simulação
 sim.run_simulation()
@@ -120,7 +125,7 @@ log = BaseLoggingAgent.open_trial_state_history(dir_path='quali_sim_01')
 
 rates = []
 for node in range(100):
-    rate = log[39][node]['quali-rate']
+    rate = log[49][node]['quali-rate']
     rates.append(float(rate))
         
 final_rates = pd.DataFrame(rates)
@@ -134,7 +139,7 @@ print(final_rates.describe())
 
 
 mean_rates_no_tempo = [initial_states.mean()]
-for time in range(40):
+for time in range(50):
     rates = []
     for node in range(numero_de_pessoas):
         rate = float(log[time][node]['quali-rate'])
@@ -145,7 +150,7 @@ for time in range(40):
 mean_rates_no_tempo = pd.DataFrame(mean_rates_no_tempo)
 
 plt.plot(mean_rates_no_tempo)
-plt.title('Rate médio no tempo\t$Críticas = 4$', size=16)
+plt.title('Mean Quality Rate', size=16)
 plt.xlabel('Tempo')
 plt.ylabel('Rate médio')
 plt.ylim(1,5)
