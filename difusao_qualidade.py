@@ -18,16 +18,16 @@ class DifusaoQualidade(BaseNetworkAgent):
     def __init__(self, environment=None, agent_id=0, state=()):
         super().__init__(environment=environment, agent_id=agent_id, state=state)
         
-        self.prob_ler_critica = 0.5
-        self.prob_adotar_critica = 0.5
-        self.prob_concordar = 0.5
+        self.prob_ler_critica = 0.3
+        self.prob_adotar_critica = 0.2
+        self.prob_concordar = 0.6
         self.prob_ir_ao_concerto = 0.5
         #self.critica_rate = 3
     
     def run(self):
         while True:
             if self.env.now < 25:
-                self.critica_rate = 3
+                self.critica_rate = 2
             else:
                 self.critica_rate = 4
             self.ir_ao_concerto()
@@ -90,7 +90,7 @@ class DifusaoQualidade(BaseNetworkAgent):
         
         
 # Topologia
-numero_de_pessoas = 100
+numero_de_pessoas = 500
 G = nx.watts_strogatz_graph(numero_de_pessoas, k=4, p=0.15, seed=123)
 
 G_scale_free = nx.scale_free_graph(numero_de_pessoas, seed=123)
@@ -124,7 +124,7 @@ print('\n\n')
 log = BaseLoggingAgent.open_trial_state_history(dir_path='quali_sim_01')
 
 rates = []
-for node in range(100):
+for node in range(numero_de_pessoas):
     rate = log[49][node]['quali-rate']
     rates.append(float(rate))
         
